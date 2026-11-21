@@ -1,14 +1,12 @@
 -- =====================================================================
 -- PART 2: LOGISTICS KPIs
--- These are the numbers a logistics supervisor reports up the chain.
--- Write each query, then save the result (copy to Excel or export CSV)
--- so you can use it in the dashboard.
+-- The numbers a logistics supervisor reports up the chain.
 -- =====================================================================
 
 
 -- ---------------------------------------------------------------------
--- WORKED EXAMPLE: Site utilization
--- Utilization = doses given / doses the site could have given (capacity).
+-- 2.0  Site utilization (doses given / capacity)
+-- Result: 71.8% across the network
 -- ---------------------------------------------------------------------
 SELECT s.site_name,
        s.daily_capacity,
@@ -23,46 +21,85 @@ ORDER BY utilization_pct DESC;
 
 
 -- ---------------------------------------------------------------------
--- TODO 2.1  SUPPLIER ON-TIME DELIVERY %
---   For each supplier: number of deliveries, % delivered on or before
---   expected_date, and average days late.
--- Hint: SUM(delivered_date <= expected_date) counts on-time rows
---       (a true comparison = 1 in SQLite).
---       Days late: julianday(delivered_date) - julianday(expected_date)
+-- 2.1  Supplier on-time delivery %
+-- Result: NorthPath Medical 58.7% (3.3 days late when late); others 91-93%
 -- ---------------------------------------------------------------------
+SELECT sp.supplier_name,
+       COUNT(*) AS deliveries,
+       ROUND(100.0 * SUM(d.delivered_date <= d.expected_date) / COUNT(*), 1) AS on_time_pct,
+       ROUND(AVG(julianday(d.delivered_date) - julianday(d.expected_date)), 2) AS avg_days_late,
+       ROUND(AVG(CASE WHEN d.delivered_date > d.expected_date
+                      THEN julianday(d.delivered_date) - julianday(d.expected_date) END), 1) AS days_late_when_late
+FROM deliveries AS d
+JOIN suppliers AS sp ON sp.supplier_id = d.supplier_id
+GROUP BY sp.supplier_name
+ORDER BY on_time_pct;
 
 
 -- ---------------------------------------------------------------------
--- TODO 2.2  ORDER FILL RATE
---   For each supplier: % of quantity ordered that was actually received.
--- Hint: 100.0 * SUM(qty_received) / SUM(qty_ordered)
+-- 2.2  Order fill rate (qty received / qty ordered)
+-- Result: every supplier ~98% - short shipments were NOT the problem
 -- ---------------------------------------------------------------------
+SELECT sp.supplier_name,
+       ROUND(100.0 * SUM(d.qty_received) / SUM(d.qty_ordered), 1) AS fill_rate_pct
+FROM deliveries AS d
+JOIN suppliers AS sp ON sp.supplier_id = d.supplier_id
+GROUP BY sp.supplier_name
+ORDER BY fill_rate_pct;
 
 
 -- ---------------------------------------------------------------------
--- TODO 2.3  STOCK-OUT DAYS BY ITEM
---   A stock-out day = an item's closing_qty is 0 at a site on a date.
---   Count stock-out days per item, and show which supplier provides it.
--- Hint: daily_inventory JOIN items JOIN suppliers; SUM(closing_qty = 0)
+-- 2.3  Stock-out days by item (closing_qty = 0)
+-- Result: Surgical masks 184 and Nitrile gloves 151 (both NorthPath);
+--         vaccine almost never ran out (17 site-days combined)
 -- ---------------------------------------------------------------------
+SELECT i.item_name,
+       sp.supplier_name,
+       SUM(inv.closing_qty = 0) AS stockout_days,
+       ROUND(100.0 * SUM(inv.closing_qty = 0) / COUNT(*), 1) AS stockout_pct_of_days
+FROM daily_inventory AS inv
+JOIN items     AS i  ON i.item_id = inv.item_id
+JOIN suppliers AS sp ON sp.supplier_id = i.supplier_id
+GROUP BY i.item_id
+ORDER BY stockout_days DESC;
 
 
 -- ---------------------------------------------------------------------
--- TODO 2.4  VACCINE WASTAGE RATE
---   Wastage % = wasted_qty / (used_qty + wasted_qty), vaccine items only.
---   Compare small sites (daily_capacity <= 100) with larger sites.
--- Hint: WHERE items.category = 'Vaccine'
---       CASE WHEN daily_capacity <= 100 THEN 'Small' ELSE 'Large' END
+-- 2.4  Vaccine wastage: small vs large sites
+-- Result: small sites 5.7% vs large sites 1.5%
 -- ---------------------------------------------------------------------
+SELECT CASE WHEN s.daily_capacity <= 100 THEN 'Small (<=100/day)' ELSE 'Large' END AS site_size,
+       SUM(inv.wasted_qty) AS doses_wasted,
+       ROUND(100.0 * SUM(inv.wasted_qty) / SUM(inv.used_qty + inv.wasted_qty), 1) AS wastage_pct
+FROM daily_inventory AS inv
+JOIN items AS i ON i.item_id = inv.item_id
+JOIN sites AS s ON s.site_id = inv.site_id
+WHERE i.category = 'Vaccine'
+GROUP BY site_size;
 
 
 -- ---------------------------------------------------------------------
--- TODO 2.5  THE BIG QUESTION: WHY WERE CLIENTS TURNED AWAY?
---   Clients can be turned away because the site hit capacity, OR because
---   it ran out of something needed to vaccinate (vaccine, syringes, gloves).
---   a) How many turned-away clients were on days demand exceeded capacity?
---   b) How many were on days nitrile gloves (ITM05) were stocked out?
--- Hint for b): join daily_site_operations to daily_inventory on
---   op_date = inv_date AND site_id = site_id AND item_id = 'ITM05',
---   then filter WHERE closing_qty = 0.
+-- 2.5  Why were clients turned away? Capacity vs supplies
+-- A client is a "capacity" turn-away if demand exceeded the site's daily
+-- capacity; anything beyond that was caused by running out of supplies.
+-- Result: 35,899 turned away = 12,675 capacity (35%) + 23,224 supplies (65%);
+--         20,338 of the supply turn-aways (88%) were on glove stock-out days
 -- ---------------------------------------------------------------------
+WITH day_detail AS (
+    SELECT o.op_date,
+           o.site_id,
+           o.clients_turned_away,
+           MIN(o.clients_turned_away,
+               MAX(0, o.clients_requesting - s.daily_capacity)) AS capacity_turnaways,
+           g.closing_qty AS gloves_left
+    FROM daily_site_operations AS o
+    JOIN sites AS s ON s.site_id = o.site_id
+    JOIN daily_inventory AS g
+         ON g.inv_date = o.op_date AND g.site_id = o.site_id AND g.item_id = 'ITM05'
+)
+SELECT SUM(clients_turned_away)                          AS total_turned_away,
+       SUM(capacity_turnaways)                           AS due_to_capacity,
+       SUM(clients_turned_away - capacity_turnaways)     AS due_to_supplies,
+       SUM(CASE WHEN gloves_left = 0
+                THEN clients_turned_away - capacity_turnaways ELSE 0 END) AS supplies_on_glove_stockout_days
+FROM day_detail;

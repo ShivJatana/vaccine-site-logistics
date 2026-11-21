@@ -1,13 +1,12 @@
 -- =====================================================================
 -- PART 1: EXPLORE THE DATA
 -- Database: vaccine_logistics.db (SQLite) - build it first with 00_create_database.sql
--- Open it in DB Browser for SQLite -> "Execute SQL" tab, run one query at a time.
--- Worked examples are complete. Exercises marked TODO are yours to write.
+-- Run each query in DB Browser for SQLite -> "Execute SQL" tab.
 -- =====================================================================
 
 
 -- ---------------------------------------------------------------------
--- WORKED EXAMPLE 1: How big is each table?
+-- 1.0  How big is each table?
 -- ---------------------------------------------------------------------
 SELECT 'sites' AS table_name, COUNT(*) AS row_count FROM sites
 UNION ALL SELECT 'items', COUNT(*) FROM items
@@ -19,8 +18,18 @@ UNION ALL SELECT 'responder_shifts', COUNT(*) FROM responder_shifts;
 
 
 -- ---------------------------------------------------------------------
--- WORKED EXAMPLE 2: Doses given by region (JOIN + GROUP BY)
--- daily_site_operations has site_id; the region lives in the sites table.
+-- 1.1  Date range and number of site-days of operation
+-- Result: 2021-04-08 to 2021-08-26, 1,921 site-days
+-- ---------------------------------------------------------------------
+SELECT MIN(op_date) AS first_day,
+       MAX(op_date) AS last_day,
+       COUNT(*)     AS site_days
+FROM daily_site_operations;
+
+
+-- ---------------------------------------------------------------------
+-- 1.2  Doses given by region
+-- Result: Peel 75,702 | Toronto 73,072 | York 57,102 | Durham 34,098 | Halton 27,887
 -- ---------------------------------------------------------------------
 SELECT s.region,
        COUNT(DISTINCT s.site_id)   AS sites,
@@ -32,42 +41,50 @@ ORDER BY doses_given DESC;
 
 
 -- ---------------------------------------------------------------------
--- WORKED EXAMPLE 3: Doses by month (working with dates)
--- SQLite stores dates as text 'YYYY-MM-DD'; strftime pulls out parts.
+-- 1.3  Top 5 sites by doses given
+-- Result: Malton Mobile clinic leads with 17,486 doses
 -- ---------------------------------------------------------------------
-SELECT strftime('%Y-%m', op_date) AS month,
-       SUM(clients_requesting)    AS clients_requesting,
-       SUM(doses_administered)    AS doses_given
+SELECT s.site_name,
+       s.region,
+       s.site_type,
+       SUM(o.doses_administered) AS doses_given
+FROM daily_site_operations AS o
+JOIN sites AS s ON s.site_id = o.site_id
+GROUP BY s.site_id
+ORDER BY doses_given DESC
+LIMIT 5;
+
+
+-- ---------------------------------------------------------------------
+-- 1.4  Saturday vs weekday demand
+-- Result: Saturday 204.5 vs weekday 148.9 clients per site per day (+37%)
+-- ---------------------------------------------------------------------
+SELECT CASE WHEN strftime('%w', op_date) = '6' THEN 'Saturday' ELSE 'Weekday' END AS day_type,
+       ROUND(AVG(clients_requesting), 1) AS avg_clients_requesting
+FROM daily_site_operations
+GROUP BY day_type;
+
+
+-- ---------------------------------------------------------------------
+-- 1.5  Clients turned away by month
+-- Result: June was worst at 15.1%; overall 11.8%
+-- ---------------------------------------------------------------------
+SELECT strftime('%Y-%m', op_date)  AS month,
+       SUM(clients_requesting)     AS clients_requesting,
+       SUM(doses_administered)     AS doses_given,
+       SUM(clients_turned_away)    AS turned_away,
+       ROUND(100.0 * SUM(clients_turned_away) / SUM(clients_requesting), 1) AS turned_away_pct
 FROM daily_site_operations
 GROUP BY month
 ORDER BY month;
 
 
 -- ---------------------------------------------------------------------
--- TODO 1.1: What date range does the data cover, and how many
---           site-days of operation are there?
--- Hint: MIN(), MAX(), COUNT(*) on daily_site_operations.
+-- 1.6  Surge period (Jun 14 - Jul 17) vs the rest
+-- Result: turned away 18.6% during the surge vs 7.3% otherwise
 -- ---------------------------------------------------------------------
-
-
--- ---------------------------------------------------------------------
--- TODO 1.2: Which 5 sites gave the most doses?
---           Show site_name, region, site_type and total doses.
--- Hint: same JOIN as Example 2, GROUP BY the site, ORDER BY ... DESC LIMIT 5.
--- ---------------------------------------------------------------------
-
-
--- ---------------------------------------------------------------------
--- TODO 1.3: Is demand different on Saturdays?
---           Average clients_requesting for Saturday vs Monday-Friday.
--- Hint: strftime('%w', op_date) returns '6' for Saturday.
---       CASE WHEN ... THEN 'Saturday' ELSE 'Weekday' END
--- ---------------------------------------------------------------------
-
-
--- ---------------------------------------------------------------------
--- TODO 1.4: How many clients were turned away each month, and what %
---           of clients requesting is that?
--- Hint: 100.0 * SUM(clients_turned_away) / SUM(clients_requesting)
---       (use 100.0, not 100, so SQLite doesn't round to a whole number)
--- ---------------------------------------------------------------------
+SELECT CASE WHEN op_date BETWEEN '2021-06-14' AND '2021-07-17' THEN 'Surge' ELSE 'Normal' END AS period,
+       ROUND(AVG(clients_requesting), 1) AS avg_clients_requesting,
+       ROUND(100.0 * SUM(clients_turned_away) / SUM(clients_requesting), 1) AS turned_away_pct
+FROM daily_site_operations
+GROUP BY period;
