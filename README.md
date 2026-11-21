@@ -4,17 +4,85 @@
 
 > ⚠️ **Sample data.** Every site, supplier, quantity and date in this project is **synthetic**, generated to resemble the kind of multi-site clinic logistics I supported with the Canadian Red Cross (2020–2022). It contains no real Red Cross, client or supplier data.
 
+**Tools:** SQL (SQLite) · Excel · Power BI (dashboard brief)
+
+---
+
+## Key results
+
+- **11.8% of clients were turned away** (35,899 of 303,760).
+- **65% of turn-aways were caused by running out of supplies**, not by sites reaching capacity. **88%** of those happened on days a site had **run out of nitrile gloves**. Vaccine itself ran out on only 17 site-days.
+- **NorthPath Medical** (gloves and masks) delivered on time only **58.7%** of the time, versus 91–93% for the other suppliers.
+- **Weekly Monday ordering couldn't keep up with demand.** Saturday demand was 37% higher than on weekdays, and turn-aways reached **18.6%** during the June–July surge.
+- **Recommended fix:** daily reorder-point checks (about **2,560 pairs** of gloves at the busiest site, versus ~1,500 ordered weekly), a backup glove supplier, and extra Saturday and surge staffing.
+
+Full write-up: **[findings/FINDINGS.md](findings/FINDINGS.md)**
+
+---
+
+## Results
+
+### Why clients were turned away
+
+```mermaid
+pie showData
+    title Clients turned away by cause (35,899)
+    "Ran out of supplies on glove stock-out days" : 20338
+    "Site at full capacity" : 12675
+    "Ran out of other supplies" : 2886
+```
+
+### Turn-aways peaked during the June–July surge
+
+```mermaid
+xychart-beta
+    title "Clients turned away (% of clients requesting), 2021"
+    x-axis [Apr, May, Jun, Jul, Aug]
+    y-axis "% turned away" 0 --> 20
+    bar [8.4, 7.9, 15.1, 12.8, 7.5]
+```
+
+### One supplier was late 4 times in 10
+
+| Supplier | Supplies | On-time delivery | Avg lead time (promised) | Fill rate |
+|---|---|---|---|---|
+| **NorthPath Medical** | Gloves, surgical masks | **58.7%** | **4.4 days (3)**, max 8 | 98.4% |
+| Lakeshore Safety Products | N95s, gowns | 91.6% | 4.1 days (4) | 98.4% |
+| Provincial Vaccine Depot | Vaccine | 91.1% | 2.1 days (2) | 98.2% |
+| Maple Medical Supply | Syringes, swabs, sharps | 93.2% | 3.1 days (3) | 98.4% |
+
+### Stock-out days by item
+
+| Item | Supplier | Stock-out site-days |
+|---|---|---|
+| Surgical masks | NorthPath | **184** |
+| Nitrile gloves | NorthPath | **151** |
+| Sharps containers | Maple | 138 |
+| Isolation gowns | Lakeshore | 67 |
+| N95 respirators | Lakeshore | 65 |
+| Syringes / swabs | Maple | 19 / 17 |
+| Vaccine (both products) | Provincial | 17 |
+
+### Vaccine wastage
+
+Small sites (100 or fewer doses a day) wasted **5.7%** of their vaccine, versus **1.5%** at larger sites.
+
+### Recommended reorder points: Malton Mobile clinic (busiest site)
+
+| Item | Avg / max daily use | Avg / max lead time | Safety stock | **Reorder point** |
+|---|---|---|---|---|
+| Nitrile gloves | 239 / 320 | 4.4 / 8 days | 1,515 | **2,560** |
+| Syringes 1 mL | 232 / 315 | 3.1 / 4 days | 547 | **1,260** |
+| mRNA vaccine – Product A | 133 / 180 | 2.1 / 3 days | 263 | **540** |
+| mRNA vaccine – Product B | 89 / 120 | 2.1 / 3 days | 174 | **360** |
+
+*Method: safety stock = (max daily use × max lead time) − (avg daily use × avg lead time); reorder point = avg daily use × avg lead time + safety stock.*
+
 ---
 
 ## The scenario
 
-A network of **32 mobile and pop-up vaccination sites** across York, Peel, Toronto, Durham and Halton ran from April to August 2021. Each site:
-
-- received vaccine, syringes, swabs and PPE from **4 suppliers**,
-- reordered **once a week (Mondays)** based on the previous week's use,
-- was staffed from a pool of **13 responders**.
-
-**About 1 in 8 clients who came for a vaccine were turned away.** Leadership wants to know why, and what to change.
+A network of **32 mobile and pop-up vaccination sites** across York, Peel, Toronto, Durham and Halton ran from April to August 2021. Each site received vaccine, syringes, swabs and PPE from **4 suppliers**, reordered **once a week (Mondays)** based on the previous week's use, and was staffed from a pool of **13 responders**.
 
 ## Business questions
 
@@ -26,9 +94,19 @@ A network of **32 mobile and pop-up vaccination sites** across York, Peel, Toron
 
 ---
 
-## The data
+## Repository contents
 
-The data is in `data/` as 8 CSV files. You'll load them into a SQLite database for the SQL work, and straight into Power BI for the dashboard.
+| Path | What it is |
+|---|---|
+| `data/` | 8 CSV files (synthetic) |
+| `sql/00_create_database.sql` | Creates the SQLite tables; steps to import the CSVs |
+| `sql/01_explore.sql` | Demand by region, site, day of week and month |
+| `sql/02_kpis.sql` | On-time delivery, fill rate, stock-outs, wastage, turn-away causes |
+| `sql/03_reorder_points.sql` | Lead times, safety stock and reorder points |
+| `findings/FINDINGS.md` | Findings and recommendations |
+| `dashboard/DASHBOARD_BRIEF.md` | One-page Power BI dashboard design |
+
+## The data
 
 | Table | Rows | One row = |
 |---|---|---|
@@ -41,58 +119,8 @@ The data is in `data/` as 8 CSV files. You'll load them into a SQLite database f
 | `deliveries` | 2,665 | one order: order date, expected date, delivered date, qty ordered vs received |
 | `responder_shifts` | 8,481 | one responder working one shift at one site |
 
-**Key relationships:** `site_id` links sites to operations, inventory, deliveries and shifts. `item_id` links items to inventory and deliveries. `supplier_id` links suppliers to items and deliveries.
+## How to reproduce
 
----
-
-## How to work through this project
-
-### Setup (20 min)
-1. Download this repo: green **Code** button → **Download ZIP**, then unzip it.
-2. Install **[DB Browser for SQLite](https://sqlitebrowser.org/)** (free).
-3. Build the database by following the steps at the top of **`sql/00_create_database.sql`**.
-4. Click the **Browse Data** tab and look at each table.
-5. Open the **Execute SQL** tab. You'll paste queries from the `sql/` folder there.
-
-### Part 1: Explore (`sql/01_explore.sql`)
-Run the 3 worked examples, read how each one works, then write **TODO 1.1 to 1.4** yourself.
-
-### Part 2: KPIs (`sql/02_kpis.sql`)
-Calculate supplier on-time %, fill rate, stock-out days, vaccine wastage and the causes of turned-away clients. **TODO 2.5 is the most important query in the project.**
-
-### Part 3: Fix the problem (`sql/03_reorder_points.sql`)
-Calculate lead times, then safety stock and reorder points for one site.
-
-### Part 4: Dashboard (`dashboard/DASHBOARD_BRIEF.md`)
-Build a one-page Power BI dashboard from the CSVs. Save a screenshot as `dashboard/dashboard.png`.
-
-### Part 5: Write it up (`findings/FINDINGS.md`)
-Fill in the template: 3–5 findings, each with a number and a recommendation. Then copy your top findings into the **Results** section at the bottom of this README.
-
----
-
-## ✅ Check your work
-
-If your queries match these numbers, you're on track.
-
-| Check | Expected |
-|---|---|
-| Date range of operations | 2021-04-08 to 2021-08-26 |
-| Total doses administered | 267,861 |
-| Total clients requesting | 303,760 |
-| Clients turned away | 11.8% |
-| Region with the most doses | Peel (75,702) |
-| Avg clients requesting: Saturday vs weekday | ~205 vs ~149 |
-| Lowest supplier on-time % | NorthPath Medical, ~59% |
-| Items with the most stock-out days | Surgical masks (184), Nitrile gloves (151) |
-| Vaccine wastage: small vs large sites | ~5.7% vs ~1.5% |
-
----
-
-## Tools
-SQL (SQLite) · Excel · Power BI
-
-## Results
-*To be completed: add your dashboard screenshot and top 3 findings here.*
-
-<!-- ![Dashboard](dashboard/dashboard.png) -->
+1. Download this repo (**Code → Download ZIP**) and install **[DB Browser for SQLite](https://sqlitebrowser.org/)** (free).
+2. Build the database by following the steps at the top of `sql/00_create_database.sql`.
+3. Run the queries in `sql/01`–`03` in the **Execute SQL** tab. Each query's expected result is noted in its comment.
