@@ -1,0 +1,5 @@
+supplier_id,supplier_name,promised_lead_time_days
+SUP01,Provincial Vaccine Depot,2
+SUP02,Maple Medical Supply,3
+SUP03,NorthPath Medical,3
+SUP04,Lakeshore Safety Products,4

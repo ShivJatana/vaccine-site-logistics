@@ -1,0 +1,33 @@
+site_id,site_name,region,site_type,daily_capacity,open_date,close_date
+S01,Markham Community centre,York,Community centre,150,2021-05-29,2021-08-21
+S02,Vaughan Pop-up clinic,York,Pop-up clinic,300,2021-05-05,2021-07-14
+S03,Richmond Hill Mobile clinic,York,Mobile clinic,300,2021-05-28,2021-07-30
+S04,Newmarket Pop-up clinic,York,Pop-up clinic,200,2021-04-18,2021-06-06
+S05,Aurora Pop-up clinic,York,Pop-up clinic,150,2021-04-22,2021-06-03
+S06,Georgina Mobile clinic,York,Mobile clinic,60,2021-05-08,2021-08-07
+S07,Stouffville Mobile clinic,York,Mobile clinic,250,2021-04-25,2021-06-20
+S08,King Mobile clinic,York,Mobile clinic,60,2021-04-24,2021-07-31
+S09,Brampton Community centre,Peel,Community centre,250,2021-04-11,2021-06-13
+S10,Mississauga Pop-up clinic,Peel,Pop-up clinic,300,2021-05-02,2021-07-04
+S11,Caledon Mobile clinic,Peel,Mobile clinic,80,2021-04-30,2021-07-02
+S12,Malton Mobile clinic,Peel,Mobile clinic,300,2021-04-13,2021-07-13
+S13,Bramalea Mobile clinic,Peel,Mobile clinic,200,2021-05-20,2021-08-26
+S14,Meadowvale Community centre,Peel,Community centre,150,2021-04-13,2021-07-06
+S15,Springdale Community centre,Peel,Community centre,250,2021-04-20,2021-06-29
+S16,Streetsville Community centre,Peel,Community centre,150,2021-04-25,2021-06-13
+S17,Scarborough Mobile clinic,Toronto,Mobile clinic,250,2021-05-09,2021-08-01
+S18,Etobicoke Mobile clinic,Toronto,Mobile clinic,250,2021-04-22,2021-06-10
+S19,North York Community centre,Toronto,Community centre,250,2021-05-16,2021-08-15
+S20,East York Community centre,Toronto,Community centre,150,2021-05-27,2021-08-12
+S21,Rexdale Pop-up clinic,Toronto,Pop-up clinic,150,2021-04-16,2021-06-18
+S22,Downsview Community centre,Toronto,Community centre,300,2021-04-27,2021-07-20
+S23,Thorncliffe Pop-up clinic,Toronto,Pop-up clinic,250,2021-05-20,2021-07-01
+S24,Ajax Community centre,Durham,Community centre,150,2021-05-26,2021-07-28
+S25,Pickering Pop-up clinic,Durham,Pop-up clinic,150,2021-04-08,2021-07-15
+S26,Oshawa Pop-up clinic,Durham,Pop-up clinic,300,2021-05-07,2021-07-16
+S27,Uxbridge Pop-up clinic,Durham,Pop-up clinic,60,2021-05-07,2021-07-23
+S28,Brock Mobile clinic,Durham,Mobile clinic,80,2021-04-30,2021-07-02
+S29,Oakville Pop-up clinic,Halton,Pop-up clinic,200,2021-05-07,2021-06-25
+S30,Burlington Mobile clinic,Halton,Mobile clinic,150,2021-06-03,2021-07-22
+S31,Milton Pop-up clinic,Halton,Pop-up clinic,300,2021-05-31,2021-08-16
+S32,Halton Hills Mobile clinic,Halton,Mobile clinic,100,2021-04-12,2021-05-24

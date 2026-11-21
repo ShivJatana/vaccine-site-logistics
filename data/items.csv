@@ -1,0 +1,10 @@
+item_id,item_name,category,unit,supplier_id,shelf_life_days
+ITM01,mRNA vaccine - Product A,Vaccine,dose,SUP01,30
+ITM02,mRNA vaccine - Product B,Vaccine,dose,SUP01,30
+ITM03,Syringes 1 mL,Medical supply,each,SUP02,
+ITM04,Alcohol swabs,Medical supply,each,SUP02,
+ITM05,Nitrile gloves,PPE,pair,SUP03,
+ITM06,Surgical masks,PPE,each,SUP03,
+ITM07,N95 respirators,PPE,each,SUP04,
+ITM08,Isolation gowns,PPE,each,SUP04,
+ITM09,Sharps containers,Medical supply,each,SUP02,
