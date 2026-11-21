@@ -1,5 +1,7 @@
 # Vaccine Site Logistics Analysis
 
+![Tools: SQL (SQLite)](https://img.shields.io/badge/Tools-SQL%20%28SQLite%29-1F3A5F?style=flat-square) ![Domain: Emergency logistics](https://img.shields.io/badge/Domain-Emergency%20logistics-4A5568?style=flat-square) ![Data: Synthetic](https://img.shields.io/badge/Data-Synthetic-lightgrey?style=flat-square) ![Status: Complete](https://img.shields.io/badge/Status-Complete-brightgreen?style=flat-square)
+
 **Why were clients turned away from mobile COVID-19 vaccination clinics, and how could better inventory planning have prevented it?**
 
 > **Sample data.** Every site, supplier, quantity and date in this project is **synthetic**, generated to resemble the kind of multi-site clinic logistics I supported with the Canadian Red Cross (2020–2022). It contains no real Red Cross, client or supplier data.
