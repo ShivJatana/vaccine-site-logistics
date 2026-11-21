@@ -6,7 +6,7 @@
 
 -- ---------------------------------------------------------------------
 -- 2.0  Site utilization (doses given / capacity)
--- Result: 71.8% across the network
+-- Result: one row per site; across the whole network, utilization is 71.8%
 -- ---------------------------------------------------------------------
 SELECT s.site_name,
        s.daily_capacity,
