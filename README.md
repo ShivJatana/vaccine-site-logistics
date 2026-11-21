@@ -1,8 +1,8 @@
-# 💉 Vaccine Site Logistics Analysis
+# Vaccine Site Logistics Analysis
 
 **Why were clients turned away from mobile COVID-19 vaccination clinics, and how could better inventory planning have prevented it?**
 
-> ⚠️ **Sample data.** Every site, supplier, quantity and date in this project is **synthetic**, generated to resemble the kind of multi-site clinic logistics I supported with the Canadian Red Cross (2020–2022). It contains no real Red Cross, client or supplier data.
+> **Sample data.** Every site, supplier, quantity and date in this project is **synthetic**, generated to resemble the kind of multi-site clinic logistics I supported with the Canadian Red Cross (2020–2022). It contains no real Red Cross, client or supplier data.
 
 **Tools:** SQL (SQLite) · Power BI (dashboard design)
 
